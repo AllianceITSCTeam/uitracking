@@ -1,0 +1,4 @@
+projects:
+  - id: fixture-app
+    name: "Fixture App — Local HTML"
+    config: projects/fixture-app/screens.config.yaml

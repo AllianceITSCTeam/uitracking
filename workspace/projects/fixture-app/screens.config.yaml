@@ -1,0 +1,8 @@
+baseUrl: http://localhost:4173
+locales: [vi]
+
+screens:
+  - id: customer-edit
+    url: /customer-edit.html
+    waitFor: "[data-testid=customer-table]"
+    track: [text, structure, style, options]

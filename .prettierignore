@@ -1,0 +1,9 @@
+dist/
+dist-ts/
+node_modules/
+pnpm-lock.yaml
+
+# Pre-existing docs/planning content, out of scope for this tool's formatting
+*.md
+docs/
+.pm-sync-config.json

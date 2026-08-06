@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-ts/
+*.tsbuildinfo
+.DS_Store
+workspace/runs/
+workspace/baseline/
+.pm-sync-state.json
+.pm-sync-config.json

@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/capture" },
+    { "path": "packages/diff" },
+    { "path": "packages/cli" },
+    { "path": "packages/recorder" },
+    { "path": "packages/dashboard" }
+  ]
+}

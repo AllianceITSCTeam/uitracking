@@ -1,0 +1,152 @@
+Epic,Task ID,Task Name,Description,Estimate (h),Priority,Dependencies,Department
+"EPIC 1 - Nền tảng & Kiến trúc","T1.1","Dựng pnpm monorepo","Các ý cần làm:
+- Khởi tạo pnpm-workspace.yaml + root package.json
+- Tạo 6 package: core, capture, diff, cli, dashboard, recorder
+- Cấu hình tsconfig base + project references giữa các package
+- core không phụ thuộc package khác; các package khác đều import từ core
+- Script build/dev ở root chạy sạch
+- (Đọc trước _shared/architecture.md)","2","High","","DevOps"
+"EPIC 1 - Nền tảng & Kiến trúc","T1.2","Cấu hình ESLint & TS strict","Các ý cần làm:
+- Cấu hình ESLint (typescript-eslint) + Prettier
+- Bật TS strict, noImplicitAny, noUncheckedIndexedAccess
+- Tích hợp rule require-testid-on-interactive cho package dashboard
+- Thêm script lint ở root, chạy pass (CI-ready)","1","Medium","T1.1","DevOps"
+"EPIC 1 - Nền tảng & Kiến trúc","T1.3","Định nghĩa Core model","Các ý cần làm:
+- Type Snapshot: Screen, Control (key, role, tag, type, order, text{label,placeholder}, options, style, attrs)
+- Enum ChangeType: TEXT_CHANGED, OPTIONS_CHANGED, CONTROL_ADDED, CONTROL_REMOVED, LOCATOR_BROKEN, CONTROL_REORDERED, TYPE_CHANGED, STYLE_CHANGED, MISSING_TRANSLATION, UNTRANSLATED, STRUCTURAL_DRIFT
+- Type Registry: control{key, locator{strategy,value,options}, track[]}
+- Type Diff/Report: Change{changeType, key, before, after, severity}, RunReport{runId, project, locale, changes[]}
+- Tên field/ChangeType khớp _shared/naming.md; lệch quy ước thì DỪNG và hỏi","2","High","T1.1","Development"
+"EPIC 1 - Nền tảng & Kiến trúc","T1.4","Zod schema cho config","Các ý cần làm:
+- Schema projects.yaml (projects[].{id,name,config})
+- Schema screens.config.yaml (baseUrl, auth, reuseSession, locales, localeSwitch, screens[])
+- Schema *.locators.yaml (screen, controls[].{key,locator,track})
+- Dùng strict() từ chối key lạ; enum cho strategy/track/ChangeType
+- Infer type từ schema, đồng bộ với core model
+- (Đọc trước _shared/validation-and-errors.md)","2.5","High","T1.3","Development"
+"EPIC 1 - Nền tảng & Kiến trúc","T1.5","Tạo workspace fixture","Các ý cần làm:
+- projects.yaml mẫu 1 project
+- screens.config.yaml cho 1-2 màn (list + edit)
+- 1 file *.locators.yaml khoảng 5-10 control
+- Trang HTML tĩnh: form (input, select, button) + 1 table có header
+- Bản HTML thứ 2 đổi nhẹ để test diff","0.5","High","T1.4","QA"
+"EPIC 2 - Capture Engine","T2.1","Config loader","Các ý cần làm:
+- Đọc file YAML, parse (js-yaml) rồi validate bằng Zod safeParse
+- Gộp lỗi Zod thành message chỉ rõ file + đường dẫn field + giá trị sai
+- Resolve path config tương đối theo workspace root
+- Không throw ở biên; trả Result ok/err
+- (Đọc trước _shared/validation-and-errors.md)","2","High","T1.4","Development"
+"EPIC 2 - Capture Engine","T2.2","Path builder & sanitize filename","Các ý cần làm:
+- Sinh path artifact: runs/<runId>/snapshots/<screen>.<locale>.json, screenshots/..., report.json/html, baseline/...
+- Sanitize screen id/locale/filename (loại ../ và ký tự cấm)
+- Đảm bảo path nằm trong workspace (chống path traversal)
+- Tạo thư mục nếu chưa có (mkdir recursive)
+- (Đọc trước _shared/file-handling.md)","1","High","T1.1","Development"
+"EPIC 2 - Capture Engine","T2.3","Playwright lifecycle","Các ý cần làm:
+- Khởi tạo Browser 1 lần (singleton) và tái dùng
+- Mỗi screen mở Context/Page riêng, đóng tường minh trong finally
+- Retry mở page có đường dọn tài nguyên khi fail
+- Đóng Browser cuối run, không để process treo
+- (Đọc trước _shared/memory-safety.md)","2","High","T1.1","Development"
+"EPIC 2 - Capture Engine","T2.4","Form login & reuse session","Các ý cần làm:
+- Chạy các bước login từ config (fill/click/waitFor)
+- Sau login lưu storageState ra file theo project
+- Lần sau nạp storageState, bỏ qua login nếu còn hạn
+- Login fail thì báo lỗi rõ và dừng project đó","3","High","T2.3;T2.1","Development"
+"EPIC 2 - Capture Engine","T3.1","Locator resolver","Các ý cần làm:
+- Hàm nhận locator{strategy,value,options} trả về Playwright Locator
+- Dispatch đúng 6 strategy theo thứ tự ưu tiên
+- Dùng count() assert đúng 1 element: 0 hoặc >1 thì gắn LOCATOR_BROKEN
+- Trả kết quả có trạng thái (resolved/broken), KHÔNG throw
+- (Bất biến số 1)","3","High","T2.3;T1.3","Development"
+"EPIC 2 - Capture Engine","T3.2","Snapshot extractor","Các ý cần làm:
+- Với mỗi control resolved đọc: label/innerText, placeholder, tagName, input type
+- Computed style whitelist: color, background, font, border, size, display/visibility
+- options: select đọc <option>; table đọc <th> header
+- order: theo document order trong container
+- Chuẩn hóa thành Control object của core, bỏ HTML thô","3","High","T3.1","Development"
+"EPIC 2 - Capture Engine","T3.3","Vòng lặp đa ngôn ngữ","Các ý cần làm:
+- Lặp theo danh sách locales trong config
+- Đổi ngôn ngữ theo localeSwitch (url pattern hoặc set cookie)
+- Chờ ổn định (networkidle/selector) rồi mới capture
+- Gắn locale vào snapshot output","1","Medium","T3.2;T2.1","Development"
+"EPIC 2 - Capture Engine","T3.4","CLI validate-locators","Các ý cần làm:
+- Lệnh validate-locators --project <id>
+- Duyệt toàn registry, resolve từng control, báo OK/broken/ambiguous
+- Cảnh báo control dùng strategy ưu tiên thấp (getByText/css)
+- Exit code khác 0 nếu có lỗi (CI-friendly)","1","Medium","T3.1;T2.1","Development"
+"EPIC 3 - Diff & Storage","T4.1","Storage writer","Các ý cần làm:
+- Ghi snapshot JSON + screenshot PNG vào runs/<runId>/
+- Tính checksum (sha256) + size, lưu kèm metadata
+- Bất biến sau ghi: không ghi đè file đã tồn tại trong cùng run
+- (Đọc trước _shared/file-handling.md)","2","High","T2.2;T1.3","Development"
+"EPIC 3 - Diff & Storage","T4.2","History index","Các ý cần làm:
+- Append entry {runId, timestamp, project, screensCount, changeSummary} vào history.json
+- Append-only, không sửa entry cũ
+- Dùng để dashboard dựng timeline","1","Medium","T4.1","Development"
+"EPIC 3 - Diff & Storage","T4.3","Diff engine","Các ý cần làm:
+- Nhận 2 snapshot (trước/sau) cùng screen + locale
+- Match control theo key logic (KHÔNG theo DOM path)
+- Sinh Change từng loại: text, options, added, removed, locator_broken, reorder, type, style (before/after từng property)
+- Gán severity theo từng loại
+- (Bất biến số 1)","3.5","High","T1.3;T3.2","Development"
+"EPIC 3 - Diff & Storage","T4.4","Ignore/mask rules","Các ý cần làm:
+- Áp ignore selector/vùng từ config
+- Áp regex maskPattern chuẩn hóa giá trị (ngày, số) trước khi so sánh
+- Không sinh change cho vùng đã ignore","1.5","Medium","T4.3","Development"
+"EPIC 3 - Diff & Storage","T5.1","So sánh đa ngôn ngữ","Các ý cần làm:
+- Chỉ diff cùng locale theo thời gian (vi-vi, en-en)
+- Cross-locale cùng run: phát hiện control thiếu text ở 1 locale (MISSING_TRANSLATION)
+- Text trùng hệt locale gốc (UNTRANSLATED)","2","Medium","T4.3;T3.3","Development"
+"EPIC 4 - Report & CLI","T5.2","Report JSON","Các ý cần làm:
+- Tổng hợp toàn bộ Change của run theo screen/locale
+- Kèm severity summary + metadata (runId, project, timestamp, counts)
+- (Đọc trước _shared/logging.md)","1.5","High","T4.3","Development"
+"EPIC 4 - Report & CLI","T5.3","Report HTML","Các ý cần làm:
+- Template HTML tĩnh render từ report.json
+- Bảng thay đổi nhóm theo screen; cột changeType, key, before, after, severity
+- Highlight màu theo severity; nhúng link screenshot
+- Xem offline không cần server","2.5","High","T5.2","Development"
+"EPIC 4 - Report & CLI","T5.4","CLI track run","Các ý cần làm:
+- Lệnh track run --project <id> và --all
+- Sinh runId sortable theo thời gian
+- Pipeline: capture > storage > diff vs baseline > report
+- Structured log kèm run_id mỗi bước; cập nhật baseline theo flag
+- (Đọc trước _shared/logging.md)","2","High","T2.4;T3.2;T4.1;T4.3;T5.2","Development"
+"EPIC 5 - Dashboard","T6.1","Scaffold & internal API","Các ý cần làm:
+- Dựng React + Vite trong package dashboard
+- API nội bộ đọc filesystem: GET projects, GET runs, GET report
+- Một response envelope thống nhất + một fetch wrapper phía client
+- (Đọc trước _shared/api-design.md và _shared/frontend.md)","2.5","Medium","T4.2;T5.2","Development"
+"EPIC 5 - Dashboard","T6.2","Project selector & timeline","Các ý cần làm:
+- Dropdown chọn project (từ projects.yaml)
+- Danh sách run/timeline theo history.json
+- Lưu project/run đang chọn ở URL query (share link được)
+- (Đọc trước _shared/frontend.md)","2","Medium","T6.1","Development"
+"EPIC 5 - Dashboard","T6.3","Diff viewer","Các ý cần làm:
+- Render report của run: danh sách change, before/after
+- Filter theo changeType + locale (ở URL query)
+- Badge severity; xem screenshot đính kèm
+- JSX tương tác gắn data-testid snake_case","3","Medium","T6.1;T5.2","Development"
+"EPIC 5 - Dashboard","T6.4","Đánh dấu đã review","Các ý cần làm:
+- Nút đánh dấu run đã review, lưu trạng thái (file/metadata)
+- Hiển thị trạng thái đã review trên timeline","0.5","Low","T6.2","Development"
+"EPIC 6 - Locator Recorder","T7.1","Recorder cơ bản","Các ý cần làm:
+- Mở headed browser tới màn cần khai báo
+- QA click element, tool phân tích và đề xuất locator theo thứ tự ưu tiên (chọn cái khả dụng nhất)
+- Cho đặt key logic rồi append control vào *.locators.yaml đúng format
+- (Bất biến số 1) — Cắt đầu tiên nếu trễ tiến độ","3","Low","T3.1;T1.4","Development"
+"EPIC 7 - QA, Test & Docs","T7.2","Viết test","Các ý cần làm:
+- Unit test tree-diff nhiều kịch bản: text đổi, thêm/bớt, reorder, style, locator broken
+- Integration capture>diff trên HTML fixture, dùng store filesystem thật (KHÔNG mock FS)
+- Assert giá trị cụ thể, 1 test = 1 kịch bản
+- (Đọc trước _shared/testing.md)","2.5","High","T4.3;T3.2","QA"
+"EPIC 7 - QA, Test & Docs","T7.3","Tài liệu README","Các ý cần làm:
+- Hướng dẫn cài đặt + cấu trúc workspace
+- Cách viết registry và dùng recorder
+- Cách chạy validate-locators và track run
+- Cách xem report offline và dashboard","1","Medium","T5.4","Development"
+"EPIC 7 - QA, Test & Docs","T7.4","Buffer & nghiệm thu","Các ý cần làm:
+- Chạy end-to-end trên fixture, đối chiếu Definition of Done
+- Fix bug phát sinh
+- Dọn dẹp code/lint cuối","1.5","Medium","T5.4;T6.3","Development"

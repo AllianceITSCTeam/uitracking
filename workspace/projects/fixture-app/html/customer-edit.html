@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Customer Edit — Fixture</title>
+  </head>
+  <body>
+    <form>
+      <label for="email">Email</label>
+      <input id="email" data-testid="customer-email" type="email" value="qa@example.com" />
+
+      <label for="status">Trạng thái</label>
+      <select id="status">
+        <option value="active">Hoạt động</option>
+        <option value="inactive">Ngừng hoạt động</option>
+      </select>
+
+      <button type="submit">Lưu</button>
+    </form>
+
+    <table data-testid="customer-table">
+      <thead>
+        <tr>
+          <th>Tên</th>
+          <th>Email</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Nguyễn Văn A</td>
+          <td>a@example.com</td>
+          <td>Hoạt động</td>
+        </tr>
+        <tr>
+          <td>Trần Thị B</td>
+          <td>b@example.com</td>
+          <td>Ngừng hoạt động</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

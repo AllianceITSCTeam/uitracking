@@ -1,0 +1,25 @@
+screen: customer-edit
+controls:
+  - key: field.email
+    locator:
+      strategy: getByTestId
+      value: customer-email
+    track: [text, type, style]
+
+  - key: field.status
+    locator:
+      strategy: getByLabel
+      value: "Trạng thái"
+    track: [text, type, options, style]
+
+  - key: btn.submit
+    locator:
+      strategy: getByRole
+      value: button
+      options: { name: "Lưu" }
+
+  - key: table.customers
+    locator:
+      strategy: getByTestId
+      value: customer-table
+    track: [structure, options]
