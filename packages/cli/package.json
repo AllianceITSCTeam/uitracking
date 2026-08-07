@@ -10,11 +10,16 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -b",
-    "dev": "tsc -b --watch"
+    "dev": "tsc -b --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "core": "workspace:*",
     "capture": "workspace:*",
-    "diff": "workspace:*"
+    "diff": "workspace:*",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.4"
   }
 }

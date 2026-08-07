@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Login — Fixture</title>
+  </head>
+  <body>
+    <form id="login-form">
+      <label for="username">Username</label>
+      <input id="username" data-testid="username" type="text" />
+
+      <label for="password">Password</label>
+      <input id="password" data-testid="password" type="password" />
+
+      <button data-testid="submit" type="submit">Login</button>
+    </form>
+    <script>
+      document.getElementById("login-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        window.location.href = "welcome.html";
+      });
+    </script>
+  </body>
+</html>

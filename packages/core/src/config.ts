@@ -42,12 +42,16 @@ const AuthConfigSchema = z
   })
   .strict();
 
+export type AuthConfig = z.infer<typeof AuthConfigSchema>;
+
 const LocaleSwitchSchema = z
   .object({
     strategy: z.enum(["url", "cookie", "ui-action"]),
     pattern: z.string().min(1),
   })
   .strict();
+
+export type LocaleSwitch = z.infer<typeof LocaleSwitchSchema>;
 
 const ScenarioStepSchema = z.union([
   z.object({ click: z.string().min(1) }).strict(),
@@ -70,6 +74,8 @@ const ScreenConfigSchema = z
     ignore: z.array(IgnoreRuleSchema).optional(),
   })
   .strict();
+
+export type ScreenConfig = z.infer<typeof ScreenConfigSchema>;
 
 /** `screens.config.yaml` — xem UI-TRACKING-TOOL-PLAN.md §5. */
 export const ScreensConfigSchema = z
