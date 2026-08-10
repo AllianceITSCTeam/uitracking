@@ -5,5 +5,5 @@
     "rootDir": "src"
   },
   "include": ["src"],
-  "references": [{ "path": "../core" }, { "path": "../capture" }, { "path": "../diff" }]
+  "references": [{ "path": "../core" }, { "path": "../capture" }, { "path": "../diff" }, { "path": "../recorder" }]
 }

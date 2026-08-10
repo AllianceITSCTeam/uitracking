@@ -3,8 +3,9 @@ dist/
 dist-ts/
 *.tsbuildinfo
 .DS_Store
-workspace/runs/
-workspace/baseline/
+workspace/**/runs/
+workspace/**/baseline/
+workspace/**/history.json
 workspace/**/.auth/
 .pm-sync-state.json
 .pm-sync-config.json

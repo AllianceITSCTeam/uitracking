@@ -13,9 +13,17 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "dev": "tsc -b --watch"
+    "dev": "tsc -b --watch",
+    "test": "vitest run"
   },
   "dependencies": {
-    "core": "workspace:*"
+    "core": "workspace:*",
+    "capture": "workspace:*",
+    "playwright": "^1.48.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.4",
+    "@types/js-yaml": "^4.0.9"
   }
 }

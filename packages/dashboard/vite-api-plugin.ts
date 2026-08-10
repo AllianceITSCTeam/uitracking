@@ -1,0 +1,136 @@
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import type { Plugin } from "vite";
+import {
+  ApiError,
+  createProject,
+  deleteProject,
+  getReport,
+  listProjects,
+  listRuns,
+  reviewRun,
+  updateProject,
+} from "./src/api-handlers.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const WORKSPACE_ROOT = join(__dirname, "..", "..", "workspace");
+
+type Envelope = {
+  data: unknown;
+  error: { code: string; message: string; fieldErrors?: Record<string, string[]> } | null;
+  meta: { generatedAt: string };
+};
+
+function sendJson(res: ServerResponse, status: number, body: Envelope): void {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.end(JSON.stringify(body));
+}
+
+function envelopeOk(data: unknown): Envelope {
+  return { data, error: null, meta: { generatedAt: new Date().toISOString() } };
+}
+
+function envelopeError(error: ApiError): Envelope {
+  return {
+    data: null,
+    error: { code: error.code, message: error.message, fieldErrors: error.fieldErrors },
+    meta: { generatedAt: new Date().toISOString() },
+  };
+}
+
+function readJsonBody(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    let raw = "";
+    req.on("data", (chunk) => {
+      raw += chunk;
+    });
+    req.on("end", () => {
+      if (raw.length === 0) {
+        resolve({});
+        return;
+      }
+      try {
+        resolve(JSON.parse(raw));
+      } catch {
+        reject(new ApiError("INVALID_JSON", 400, "Body không phải JSON hợp lệ"));
+      }
+    });
+    req.on("error", reject);
+  });
+}
+
+async function handle(res: ServerResponse, run: () => unknown): Promise<void> {
+  try {
+    const data = await run();
+    sendJson(res, 200, envelopeOk(data));
+  } catch (error) {
+    if (error instanceof ApiError) {
+      sendJson(res, error.status, envelopeError(error));
+      return;
+    }
+    sendJson(res, 500, envelopeError(new ApiError("INTERNAL_ERROR", 500, "Lỗi không xác định")));
+  }
+}
+
+/** Vite dev middleware phục vụ API nội bộ dashboard — đọc trực tiếp workspace/ trên filesystem. */
+export function apiPlugin(): Plugin {
+  return {
+    name: "debqc-dashboard-api",
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = new URL(req.url ?? "/", "http://localhost");
+        const path = url.pathname;
+        const method = req.method ?? "GET";
+
+        const projectMatch = /^\/api\/projects\/([^/]+)$/.exec(path);
+        const runsMatch = /^\/api\/projects\/([^/]+)\/runs$/.exec(path);
+        const reportMatch = /^\/api\/projects\/([^/]+)\/runs\/([^/]+)\/report$/.exec(path);
+        const reviewMatch = /^\/api\/projects\/([^/]+)\/runs\/([^/]+)\/review$/.exec(path);
+
+        if (method === "GET" && path === "/api/projects") {
+          await handle(res, () => listProjects(WORKSPACE_ROOT));
+          return;
+        }
+
+        if (method === "POST" && path === "/api/projects") {
+          await handle(res, async () => createProject(WORKSPACE_ROOT, await readJsonBody(req)));
+          return;
+        }
+
+        if (method === "PATCH" && projectMatch) {
+          const [, projectId] = projectMatch;
+          await handle(res, async () => updateProject(WORKSPACE_ROOT, projectId as string, await readJsonBody(req)));
+          return;
+        }
+
+        if (method === "DELETE" && projectMatch) {
+          const [, projectId] = projectMatch;
+          await handle(res, () => deleteProject(WORKSPACE_ROOT, projectId as string));
+          return;
+        }
+
+        if (method === "GET" && runsMatch) {
+          const [, projectId] = runsMatch;
+          await handle(res, () => listRuns(WORKSPACE_ROOT, projectId as string));
+          return;
+        }
+
+        if (method === "GET" && reportMatch) {
+          const [, projectId, runId] = reportMatch;
+          await handle(res, () => getReport(WORKSPACE_ROOT, projectId as string, runId as string));
+          return;
+        }
+
+        if (method === "POST" && reviewMatch) {
+          const [, projectId, runId] = reviewMatch;
+          await handle(res, () => reviewRun(WORKSPACE_ROOT, projectId as string, runId as string));
+          return;
+        }
+
+        next();
+      });
+    },
+  };
+}

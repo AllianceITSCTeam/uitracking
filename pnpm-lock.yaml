@@ -66,6 +66,12 @@ importers:
       diff:
         specifier: workspace:*
         version: link:../diff
+      playwright:
+        specifier: ^1.48.0
+        version: 1.62.1
+      recorder:
+        specifier: workspace:*
+        version: link:../recorder
     devDependencies:
       vitest:
         specifier: ^2.1.4
@@ -111,18 +117,47 @@ importers:
       vite:
         specifier: ^5.4.10
         version: 5.4.21(@types/node@22.20.1)
+      vitest:
+        specifier: ^2.1.4
+        version: 2.1.9(@types/node@22.20.1)(supports-color@7.2.0)
 
   packages/diff:
     dependencies:
       core:
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      capture:
+        specifier: workspace:*
+        version: link:../capture
+      playwright:
+        specifier: ^1.48.0
+        version: 1.62.1
+      vitest:
+        specifier: ^2.1.4
+        version: 2.1.9(@types/node@22.20.1)(supports-color@7.2.0)
 
   packages/recorder:
     dependencies:
+      capture:
+        specifier: workspace:*
+        version: link:../capture
       core:
         specifier: workspace:*
         version: link:../core
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.3.1
+      playwright:
+        specifier: ^1.48.0
+        version: 1.62.1
+    devDependencies:
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
+      vitest:
+        specifier: ^2.1.4
+        version: 2.1.9(@types/node@22.20.1)(supports-color@7.2.0)
 
 packages:
 

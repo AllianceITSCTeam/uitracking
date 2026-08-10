@@ -63,6 +63,8 @@ const IgnoreRuleSchema = z.union([
   z.object({ maskPattern: z.string().min(1) }).strict(),
 ]);
 
+export type IgnoreRule = z.infer<typeof IgnoreRuleSchema>;
+
 const ScreenConfigSchema = z
   .object({
     id: z.string().min(1),

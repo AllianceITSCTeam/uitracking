@@ -1,10 +1,8 @@
-import type { Control, LocaleSwitch, RegistryControl, Screen, ScreenConfig } from "core";
+import type { BrokenControl, Control, LocaleSwitch, RegistryControl, Screen, ScreenConfig } from "core";
 import type { BrowserContext, Locator as PlaywrightLocator } from "playwright";
 import { resolveLocator } from "./locator-resolver.js";
 import { extractControl } from "./snapshot-extractor.js";
 import { runSteps } from "./step-runner.js";
-
-export type BrokenControl = { key: string; reason: "NOT_FOUND" | "AMBIGUOUS"; count: number };
 
 export type CaptureScreenResult = { screen: Screen; broken: BrokenControl[] };
 

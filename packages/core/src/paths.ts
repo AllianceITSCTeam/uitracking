@@ -17,6 +17,11 @@ export function buildProjectDir(workspaceRoot: string, projectId: string): strin
   return join(workspaceRoot, "projects", sanitizeIdSegment(projectId));
 }
 
+/** Đường dẫn `config` trong `workspace/projects.yaml` — relative tới workspace root. */
+export function buildProjectConfigRelativePath(projectId: string): string {
+  return join("projects", sanitizeIdSegment(projectId), "screens.config.yaml");
+}
+
 export function buildBaselinePath(
   workspaceRoot: string,
   projectId: string,
@@ -60,4 +65,12 @@ export function buildScreenshotPath(
     "screenshots",
     `${sanitizeIdSegment(screenId)}.${sanitizeIdSegment(locale)}.png`,
   );
+}
+
+export function buildReportPath(workspaceRoot: string, projectId: string, runId: string): string {
+  return join(buildRunDir(workspaceRoot, projectId, runId), "report.json");
+}
+
+export function buildReportHtmlPath(workspaceRoot: string, projectId: string, runId: string): string {
+  return join(buildRunDir(workspaceRoot, projectId, runId), "report.html");
 }
