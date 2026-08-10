@@ -1,10 +1,8 @@
 import { useCallback, useState } from "react";
 import type { HistoryEntry } from "core/node";
-import { ProjectSelect } from "./ProjectSelect.js";
-import { ProjectManager } from "./ProjectManager.js";
-import { RunTimeline } from "./RunTimeline.js";
-import { DiffViewer } from "./DiffViewer.js";
-import { ReviewButton } from "./ReviewButton.js";
+import { Nav } from "./Nav.js";
+import { ConfigPage } from "./ConfigPage.js";
+import { ReviewPage } from "./ReviewPage.js";
 import { useQueryParams } from "./use-query-params.js";
 import { useProjects } from "./use-projects.js";
 
@@ -15,6 +13,7 @@ export function App() {
   const [projectsRefreshToken, setProjectsRefreshToken] = useState(0);
   const projects = useProjects(projectsRefreshToken);
 
+  const page = params.page === "config" ? "config" : "review";
   const projectId = params.project;
   const runId = params.run;
   const currentRun = runs.find((r) => r.runId === runId);
@@ -23,44 +22,31 @@ export function App() {
     setRuns(loaded);
   }, []);
 
+  const handleProjectsChanged = () => setProjectsRefreshToken((t) => t + 1);
+
   return (
-    <main>
-      <h1>DEBQC — Dashboard</h1>
-      <section>
-        <ProjectSelect
+    <main className="min-h-screen mx-auto max-w-6xl space-y-6 bg-slate-50 p-6">
+      <h1 className="text-2xl font-semibold text-slate-900">DEBQC — Dashboard</h1>
+      <Nav page={page} onNavigate={(next) => setQueryParams({ page: next })} />
+      {page === "config" ? (
+        <ConfigPage projects={projects} onChanged={handleProjectsChanged} />
+      ) : (
+        <ReviewPage
           projects={projects}
-          projectId={projectId}
-          onChange={(id) => setQueryParams({ project: id, run: undefined })}
-        />
-      </section>
-      <section>
-        <ProjectManager projects={projects} onChanged={() => setProjectsRefreshToken((t) => t + 1)} />
-      </section>
-      <section>
-        <RunTimeline
-          projectId={projectId}
-          runId={runId}
-          refreshToken={refreshToken}
-          onSelectRun={(id) => setQueryParams({ run: id })}
-          onRunsLoaded={handleRunsLoaded}
-        />
-      </section>
-      <section>
-        <ReviewButton
-          projectId={projectId}
-          runId={runId}
-          reviewedAt={currentRun?.reviewedAt}
-          onReviewed={() => setRefreshToken((t) => t + 1)}
-        />
-        <DiffViewer
           projectId={projectId}
           runId={runId}
           changeType={params.changeType}
           locale={params.locale}
+          reviewedAt={currentRun?.reviewedAt}
+          refreshToken={refreshToken}
+          onProjectChange={(id) => setQueryParams({ project: id, run: undefined })}
+          onSelectRun={(id) => setQueryParams({ run: id })}
+          onRunsLoaded={handleRunsLoaded}
+          onReviewed={() => setRefreshToken((t) => t + 1)}
           onChangeTypeFilter={(changeType) => setQueryParams({ changeType })}
           onLocaleFilter={(locale) => setQueryParams({ locale })}
         />
-      </section>
+      )}
     </main>
   );
 }

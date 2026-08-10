@@ -1,7 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { apiPlugin } from "./vite-api-plugin.js";
 
 export default defineConfig({
-  plugins: [react(), apiPlugin()],
+  plugins: [react(), tailwindcss(), apiPlugin()],
 });

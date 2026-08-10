@@ -60,77 +60,98 @@ export function ProjectManager({ projects, onChanged }: Props) {
   };
 
   return (
-    <section>
-      <h2>Quản lý project</h2>
-      {error && <p role="alert">{error}</p>}
-      <ul>
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold text-slate-900">Quản lý project</h2>
+      {error && (
+        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+      <ul className="divide-y divide-slate-200 rounded-md border border-slate-200">
         {projects.map((project) => (
-          <li key={project.id}>
+          <li key={project.id} className="flex items-center justify-between gap-3 px-3 py-2">
             {editingId === project.id ? (
               <>
-                <label>
+                <label className="flex flex-1 items-center gap-2 text-sm text-slate-700">
                   Tên
                   <input
                     data-testid="project_edit_name_input"
                     value={editingName}
                     onChange={(e) => setEditingName(e.target.value)}
+                    className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </label>
-                <button type="button" data-testid="project_save_button" onClick={handleSaveEdit}>
+                <button
+                  type="button"
+                  data-testid="project_save_button"
+                  onClick={handleSaveEdit}
+                  className="rounded-md bg-indigo-600 px-3 py-1 text-sm font-medium text-white hover:bg-indigo-700"
+                >
                   Lưu
                 </button>
                 <button
                   type="button"
                   data-testid="project_cancel_edit_button"
                   onClick={() => setEditingId(null)}
+                  className="rounded-md border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Huỷ
                 </button>
               </>
             ) : (
               <>
-                <span>
-                  {project.name} ({project.id})
+                <span className="text-sm text-slate-800">
+                  {project.name} <span className="text-slate-400">({project.id})</span>
                 </span>
-                <button
-                  type="button"
-                  data-testid="project_edit_button"
-                  onClick={() => startEdit(project)}
-                >
-                  Sửa
-                </button>
-                <button
-                  type="button"
-                  data-testid="project_delete_button"
-                  onClick={() => handleDelete(project.id)}
-                >
-                  Xoá
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    data-testid="project_edit_button"
+                    onClick={() => startEdit(project)}
+                    className="rounded-md border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="project_delete_button"
+                    onClick={() => handleDelete(project.id)}
+                    className="rounded-md border border-red-200 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50"
+                  >
+                    Xoá
+                  </button>
+                </div>
               </>
             )}
           </li>
         ))}
       </ul>
-      <form onSubmit={handleCreate}>
-        <label>
+      <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-sm text-slate-700">
           Id
           <input
             data-testid="project_id_input"
             value={newId}
             onChange={(e) => setNewId(e.target.value)}
             required
+            className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm text-slate-700">
           Tên
           <input
             data-testid="project_name_input"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             required
+            className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </label>
-        <button type="submit" data-testid="project_create_button">
+        <button
+          type="submit"
+          data-testid="project_create_button"
+          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+        >
           Thêm project
         </button>
       </form>

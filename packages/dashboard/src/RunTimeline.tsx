@@ -33,7 +33,7 @@ export function RunTimeline({ projectId, runId, refreshToken, onSelectRun, onRun
   if (!projectId) return null;
 
   return (
-    <ul>
+    <ul className="flex flex-wrap gap-2">
       {runs.map((run) => (
         <li key={run.runId}>
           <button
@@ -41,6 +41,11 @@ export function RunTimeline({ projectId, runId, refreshToken, onSelectRun, onRun
             data-testid="run_item_button"
             aria-current={run.runId === runId}
             onClick={() => onSelectRun(run.runId)}
+            className={
+              run.runId === runId
+                ? "rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white"
+                : "rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            }
           >
             {run.capturedAt} {run.reviewedAt ? "— Đã review" : ""}
           </button>

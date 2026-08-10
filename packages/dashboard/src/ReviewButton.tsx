@@ -30,6 +30,7 @@ export function ReviewButton({ projectId, runId, reviewedAt, onReviewed }: Props
       data-testid="review_run_button"
       disabled={Boolean(reviewedAt) || pending}
       onClick={handleClick}
+      className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
     >
       {reviewedAt ? "Đã review" : "Đánh dấu đã review"}
     </button>
