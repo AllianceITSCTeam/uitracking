@@ -137,5 +137,11 @@ export function diffScreens(input: DiffInput): RunReport {
     });
   }
 
-  return { runId, project, screenId: current.id, locale, changes };
+  const controls = current.controls.map((control) => ({
+    key: control.key,
+    before: previousByKey.get(control.key) ?? null,
+    after: control,
+  }));
+
+  return { runId, project, screenId: current.id, locale, changes, controls };
 }

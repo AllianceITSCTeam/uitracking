@@ -209,4 +209,34 @@ describe("diffScreens", () => {
 
     expect(report.changes).toEqual([]);
   });
+
+  it("includes an unchanged control in controls with before/after both set, even though changes is empty", () => {
+    const previousControl = makeControl();
+    const currentControl = makeControl();
+    const previous = makeScreen([previousControl]);
+    const current = makeScreen([currentControl]);
+
+    const report = diffScreens({ runId: "run-1", project: "fixture-app", locale: "vi", previous, current, broken: [] });
+
+    expect(report.changes).toEqual([]);
+    expect(report.controls).toEqual([{ key: "field.email", before: previousControl, after: currentControl }]);
+  });
+
+  it("sets before to null in controls for a control with no previous snapshot", () => {
+    const currentControl = makeControl();
+    const current = makeScreen([currentControl]);
+
+    const report = diffScreens({ runId: "run-1", project: "fixture-app", locale: "vi", previous: null, current, broken: [] });
+
+    expect(report.controls).toEqual([{ key: "field.email", before: null, after: currentControl }]);
+  });
+
+  it("omits a removed control from controls (only current.controls are represented)", () => {
+    const previous = makeScreen([makeControl({ key: "field.email" })]);
+    const current = makeScreen([]);
+
+    const report = diffScreens({ runId: "run-1", project: "fixture-app", locale: "vi", previous, current, broken: [] });
+
+    expect(report.controls).toEqual([]);
+  });
 });

@@ -22,6 +22,7 @@ const REPORT: Report = {
           severity: "MINOR",
         },
       ],
+      controls: [],
     },
   ],
   severityCounts: { CRITICAL: 0, MAJOR: 0, MINOR: 1, INFO: 0 },
@@ -58,6 +59,7 @@ describe("renderReportHtml", () => {
               severity: "MINOR",
             },
           ],
+          controls: [],
         },
       ],
     };

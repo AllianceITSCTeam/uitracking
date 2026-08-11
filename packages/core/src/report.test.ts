@@ -8,6 +8,7 @@ function makeRunReport(overrides: Partial<RunReport> = {}): RunReport {
     screenId: "customer-edit",
     locale: "vi",
     changes: [],
+    controls: [],
     ...overrides,
   };
 }

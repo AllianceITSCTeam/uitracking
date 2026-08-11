@@ -55,7 +55,9 @@ export function diffLocales(input: LocaleDiffInput): RunReport[] {
       }
     }
 
-    reports.push({ runId, project, screenId: screen.id, locale, changes });
+    // controls: [] — báo cáo này so locale-với-locale trong cùng 1 run, không có khái niệm baseline
+    // run trước; full snapshot Trước/Sau đã có sẵn ở RunReport do diffScreens tạo cho cùng screen/locale.
+    reports.push({ runId, project, screenId: screen.id, locale, changes, controls: [] });
   }
 
   return reports;

@@ -1,4 +1,5 @@
 import { SEVERITIES, type ChangeType, type Severity } from "./change-type.js";
+import type { Control } from "./snapshot.js";
 
 export type Change = {
   changeType: ChangeType;
@@ -8,12 +9,20 @@ export type Change = {
   severity: Severity;
 };
 
+/** Snapshot Trước/Sau cho 1 control của lần chạy hiện tại — không phụ thuộc control đó có đổi hay không. */
+export type ControlSnapshotRow = {
+  key: string;
+  before: Control | null;
+  after: Control;
+};
+
 export type RunReport = {
   runId: string;
   project: string;
   screenId: string;
   locale: string;
   changes: Change[];
+  controls: ControlSnapshotRow[];
 };
 
 export type SeverityCounts = Record<Severity, number>;
