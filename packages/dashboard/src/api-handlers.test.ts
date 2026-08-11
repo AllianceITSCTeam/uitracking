@@ -228,6 +228,50 @@ describe("api-handlers", () => {
     }
   });
 
+  it("updateScreensConfig writes a valid auth block and getScreensConfig reads it back", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    updateScreensConfig(workspaceRoot, "myapp", {
+      baseUrl: "https://myapp.test",
+      auth: {
+        type: "form",
+        loginUrl: "https://myapp.test/login",
+        steps: [{ fill: "#username", value: "${MYAPP_USERNAME}" }],
+        reuseSession: true,
+      },
+      locales: ["en"],
+      screens: [{ id: "home", url: "/", track: ["text"] }],
+    });
+
+    expect(getScreensConfig(workspaceRoot, "myapp").auth).toEqual({
+      type: "form",
+      loginUrl: "https://myapp.test/login",
+      steps: [{ fill: "#username", value: "${MYAPP_USERNAME}" }],
+      reuseSession: true,
+    });
+  });
+
+  it("updateScreensConfig throws VALIDATION_ERROR for an auth step that matches no known action", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    expect.assertions(2);
+    try {
+      updateScreensConfig(workspaceRoot, "myapp", {
+        baseUrl: "https://myapp.test",
+        auth: {
+          type: "form",
+          loginUrl: "https://myapp.test/login",
+          steps: [{} as unknown as { click: string }],
+        },
+        locales: ["en"],
+        screens: [{ id: "home", url: "/", track: ["text"] }],
+      });
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).code).toBe("VALIDATION_ERROR");
+    }
+  });
+
   it("getLocatorsFile returns an empty control list when the file does not exist yet", () => {
     createProject(workspaceRoot, { id: "myapp", name: "My App" });
 
