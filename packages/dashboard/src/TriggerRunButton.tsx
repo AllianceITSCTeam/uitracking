@@ -14,6 +14,7 @@ const POLL_INTERVAL_MS = 2000;
 export function TriggerRunButton({ projectId, onRunFinished }: Props) {
   const [job, setJob] = useState<CaptureJobState | undefined>();
   const [notice, setNotice] = useState<string | undefined>();
+  const [error, setError] = useState<string | undefined>();
   const pollingRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export function TriggerRunButton({ projectId, onRunFinished }: Props) {
   useEffect(() => {
     setJob(undefined);
     setNotice(undefined);
+    setError(undefined);
     if (pollingRef.current) clearInterval(pollingRef.current);
   }, [projectId]);
 
@@ -44,21 +46,27 @@ export function TriggerRunButton({ projectId, onRunFinished }: Props) {
             }
           }
         })
-        .catch(() => {
+        .catch((err: unknown) => {
           if (pollingRef.current) clearInterval(pollingRef.current);
+          setError(err instanceof Error ? err.message : String(err));
         });
     }, POLL_INTERVAL_MS);
   };
 
   const handleClick = async () => {
     setNotice(undefined);
-    const result = await apiPost<TriggerResponse>(`/api/projects/${projectId}/capture-job`);
-    setJob(result.job);
-    if (result.alreadyRunning) {
-      setNotice(`Đang chạy capture cho project "${result.job.projectId}" — vui lòng đợi rồi thử lại.`);
-      return;
+    setError(undefined);
+    try {
+      const result = await apiPost<TriggerResponse>(`/api/projects/${projectId}/capture-job`);
+      setJob(result.job);
+      if (result.alreadyRunning) {
+        setNotice(`Đang chạy capture cho project "${result.job.projectId}" — vui lòng đợi rồi thử lại.`);
+        return;
+      }
+      startPolling();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
-    startPolling();
   };
 
   const isRunning = job?.status === "running";
@@ -78,6 +86,7 @@ export function TriggerRunButton({ projectId, onRunFinished }: Props) {
       {job?.status === "failed" ? (
         <p className="text-sm text-red-600">Capture thất bại{job.errorMessage ? `: ${job.errorMessage}` : ""}</p>
       ) : null}
+      {error ? <p className="text-sm text-red-600">Lỗi khi gọi capture: {error}</p> : null}
     </div>
   );
 }
