@@ -8,11 +8,15 @@ import {
   ApiError,
   createProject,
   deleteProject,
+  getLocatorsFile,
   getReport,
+  getScreensConfig,
   listProjects,
   listRuns,
   reviewRun,
+  updateLocatorsFile,
   updateProject,
+  updateScreensConfig,
 } from "./api-handlers.js";
 
 function writeWorkspace(root: string): void {
@@ -169,6 +173,92 @@ describe("api-handlers", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).code).toBe("LAST_PROJECT_FORBIDDEN");
+    }
+  });
+
+  it("getScreensConfig returns the stub written by createProject", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    const config = getScreensConfig(workspaceRoot, "myapp");
+
+    expect(config.baseUrl).toBe("https://example.com");
+  });
+
+  it("getScreensConfig throws PROJECT_NOT_FOUND for unknown project", () => {
+    expect.assertions(2);
+    try {
+      getScreensConfig(workspaceRoot, "unknown-app");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).code).toBe("PROJECT_NOT_FOUND");
+    }
+  });
+
+  it("updateScreensConfig writes the new config and getScreensConfig reads it back", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    updateScreensConfig(workspaceRoot, "myapp", {
+      baseUrl: "https://myapp.test",
+      locales: ["vi", "en"],
+      screens: [{ id: "home", url: "/", track: ["text", "structure"] }],
+    });
+
+    expect(getScreensConfig(workspaceRoot, "myapp")).toEqual({
+      baseUrl: "https://myapp.test",
+      locales: ["vi", "en"],
+      screens: [{ id: "home", url: "/", track: ["text", "structure"] }],
+    });
+  });
+
+  it("updateScreensConfig throws VALIDATION_ERROR with fieldErrors for an invalid baseUrl", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    expect.assertions(3);
+    try {
+      updateScreensConfig(workspaceRoot, "myapp", {
+        baseUrl: "not-a-url",
+        locales: ["vi"],
+        screens: [{ id: "home", url: "/", track: [] }],
+      });
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).code).toBe("VALIDATION_ERROR");
+      expect((error as ApiError).fieldErrors).toHaveProperty("baseUrl");
+    }
+  });
+
+  it("getLocatorsFile returns an empty control list when the file does not exist yet", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    expect(getLocatorsFile(workspaceRoot, "myapp", "home")).toEqual({ screen: "home", controls: [] });
+  });
+
+  it("updateLocatorsFile writes controls and getLocatorsFile reads them back", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    updateLocatorsFile(workspaceRoot, "myapp", "home", {
+      screen: "home",
+      controls: [{ key: "btn.submit", locator: { strategy: "getByRole", value: "button" } }],
+    });
+
+    expect(getLocatorsFile(workspaceRoot, "myapp", "home")).toEqual({
+      screen: "home",
+      controls: [{ key: "btn.submit", locator: { strategy: "getByRole", value: "button" } }],
+    });
+  });
+
+  it("updateLocatorsFile throws VALIDATION_ERROR for an unknown locator strategy", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    expect.assertions(2);
+    try {
+      updateLocatorsFile(workspaceRoot, "myapp", "home", {
+        screen: "home",
+        controls: [{ key: "btn.submit", locator: { strategy: "getByMagic", value: "button" } }],
+      });
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).code).toBe("VALIDATION_ERROR");
     }
   });
 });

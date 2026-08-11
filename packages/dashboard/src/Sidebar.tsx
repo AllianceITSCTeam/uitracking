@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-type Page = "review" | "config";
+type Page = "review" | "config" | "screens-config";
 
 type Props = {
   page: Page;
@@ -49,6 +49,18 @@ export function Sidebar({ page, onNavigate }: Props) {
           >
             <span aria-hidden="true">⚙</span>
             {!collapsed && <span>Quản lý project</span>}
+          </button>
+          <button
+            type="button"
+            data-testid="nav_screens_config_button"
+            aria-current={page === "screens-config"}
+            aria-label="URL & Locators"
+            title="URL & Locators"
+            onClick={() => onNavigate("screens-config")}
+            className={navButtonClass(page === "screens-config")}
+          >
+            <span aria-hidden="true">🔗</span>
+            {!collapsed && <span>URL & Locators</span>}
           </button>
         </div>
         <div className="flex flex-col gap-1">

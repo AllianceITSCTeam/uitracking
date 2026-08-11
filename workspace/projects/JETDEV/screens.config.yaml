@@ -1,0 +1,10 @@
+baseUrl: https://jetdev.example.com
+locales:
+  - vi
+  - en
+screens:
+  - id: home
+    url: /
+    track:
+      - text
+      - structure

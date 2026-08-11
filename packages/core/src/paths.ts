@@ -22,6 +22,14 @@ export function buildProjectConfigRelativePath(projectId: string): string {
   return join("projects", sanitizeIdSegment(projectId), "screens.config.yaml");
 }
 
+export function buildScreensConfigPath(workspaceRoot: string, projectId: string): string {
+  return join(buildProjectDir(workspaceRoot, projectId), "screens.config.yaml");
+}
+
+export function buildLocatorsFilePath(workspaceRoot: string, projectId: string, screenId: string): string {
+  return join(buildProjectDir(workspaceRoot, projectId), "locators", `${sanitizeIdSegment(screenId)}.locators.yaml`);
+}
+
 export function buildBaselinePath(
   workspaceRoot: string,
   projectId: string,

@@ -1,15 +1,22 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Report } from "core";
+import { ScreensConfigSchema, LocatorsFileSchema } from "core";
+import type { LocatorsFile, Report, ScreensConfig } from "core";
 import {
+  buildLocatorsFilePath,
   buildProjectConfigRelativePath,
   buildProjectDir,
   buildReportPath,
+  buildScreensConfigPath,
   ensureScreensConfigStub,
+  loadLocatorsFile,
   loadProjectsFile,
+  loadScreensConfig,
   markRunReviewed,
   sanitizeIdSegment,
+  writeLocatorsFile,
   writeProjectsFile,
+  writeScreensConfig,
   type HistoryEntry,
 } from "core/node";
 import type { ProjectsFile } from "core";
@@ -157,6 +164,85 @@ export function getReport(workspaceRoot: string, projectId: string, runId: strin
   }
 
   return JSON.parse(readFileSync(path, "utf-8")) as Report;
+}
+
+function fieldErrorsFromZodIssues(issues: { path: PropertyKey[]; message: string }[]): Record<string, string[]> {
+  const fieldErrors: Record<string, string[]> = {};
+  for (const issue of issues) {
+    const field = issue.path.length > 0 ? issue.path.join(".") : "<root>";
+    (fieldErrors[field] ??= []).push(issue.message);
+  }
+  return fieldErrors;
+}
+
+export function getScreensConfig(workspaceRoot: string, projectId: string): ScreensConfig {
+  const id = requireValidId(projectId);
+  requireProject(workspaceRoot, id);
+
+  const result = loadScreensConfig(buildScreensConfigPath(workspaceRoot, id));
+  if (!result.ok) {
+    throw new ApiError("SCREENS_CONFIG_INVALID", 500, `projects/${id}/screens.config.yaml không hợp lệ`);
+  }
+  return result.data;
+}
+
+export function updateScreensConfig(workspaceRoot: string, projectId: string, input: unknown): ScreensConfig {
+  const id = requireValidId(projectId);
+  requireProject(workspaceRoot, id);
+
+  const parsed = ScreensConfigSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      400,
+      "screens.config.yaml không hợp lệ",
+      fieldErrorsFromZodIssues(parsed.error.issues),
+    );
+  }
+
+  writeScreensConfig(workspaceRoot, id, parsed.data);
+  return parsed.data;
+}
+
+export function getLocatorsFile(workspaceRoot: string, projectId: string, screenId: string): LocatorsFile {
+  const id = requireValidId(projectId);
+  const sId = requireValidId(screenId);
+  requireProject(workspaceRoot, id);
+
+  const path = buildLocatorsFilePath(workspaceRoot, id, sId);
+  if (!existsSync(path)) {
+    return { screen: sId, controls: [] };
+  }
+
+  const result = loadLocatorsFile(path);
+  if (!result.ok) {
+    throw new ApiError("LOCATORS_FILE_INVALID", 500, `${sId}.locators.yaml không hợp lệ`);
+  }
+  return result.data;
+}
+
+export function updateLocatorsFile(
+  workspaceRoot: string,
+  projectId: string,
+  screenId: string,
+  input: unknown,
+): LocatorsFile {
+  const id = requireValidId(projectId);
+  const sId = requireValidId(screenId);
+  requireProject(workspaceRoot, id);
+
+  const parsed = LocatorsFileSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      400,
+      `${sId}.locators.yaml không hợp lệ`,
+      fieldErrorsFromZodIssues(parsed.error.issues),
+    );
+  }
+
+  writeLocatorsFile(workspaceRoot, id, sId, parsed.data);
+  return parsed.data;
 }
 
 export function reviewRun(workspaceRoot: string, projectId: string, runId: string): HistoryEntry {

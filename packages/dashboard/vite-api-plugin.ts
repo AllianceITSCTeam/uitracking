@@ -6,11 +6,15 @@ import {
   ApiError,
   createProject,
   deleteProject,
+  getLocatorsFile,
   getReport,
+  getScreensConfig,
   listProjects,
   listRuns,
   reviewRun,
+  updateLocatorsFile,
   updateProject,
+  updateScreensConfig,
 } from "./src/api-handlers.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -88,6 +92,8 @@ export function apiPlugin(): Plugin {
         const runsMatch = /^\/api\/projects\/([^/]+)\/runs$/.exec(path);
         const reportMatch = /^\/api\/projects\/([^/]+)\/runs\/([^/]+)\/report$/.exec(path);
         const reviewMatch = /^\/api\/projects\/([^/]+)\/runs\/([^/]+)\/review$/.exec(path);
+        const screensConfigMatch = /^\/api\/projects\/([^/]+)\/screens-config$/.exec(path);
+        const locatorsMatch = /^\/api\/projects\/([^/]+)\/screens\/([^/]+)\/locators$/.exec(path);
 
         if (method === "GET" && path === "/api/projects") {
           await handle(res, () => listProjects(WORKSPACE_ROOT));
@@ -126,6 +132,34 @@ export function apiPlugin(): Plugin {
         if (method === "POST" && reviewMatch) {
           const [, projectId, runId] = reviewMatch;
           await handle(res, () => reviewRun(WORKSPACE_ROOT, projectId as string, runId as string));
+          return;
+        }
+
+        if (method === "GET" && screensConfigMatch) {
+          const [, projectId] = screensConfigMatch;
+          await handle(res, () => getScreensConfig(WORKSPACE_ROOT, projectId as string));
+          return;
+        }
+
+        if (method === "PATCH" && screensConfigMatch) {
+          const [, projectId] = screensConfigMatch;
+          await handle(res, async () =>
+            updateScreensConfig(WORKSPACE_ROOT, projectId as string, await readJsonBody(req)),
+          );
+          return;
+        }
+
+        if (method === "GET" && locatorsMatch) {
+          const [, projectId, screenId] = locatorsMatch;
+          await handle(res, () => getLocatorsFile(WORKSPACE_ROOT, projectId as string, screenId as string));
+          return;
+        }
+
+        if (method === "PATCH" && locatorsMatch) {
+          const [, projectId, screenId] = locatorsMatch;
+          await handle(res, async () =>
+            updateLocatorsFile(WORKSPACE_ROOT, projectId as string, screenId as string, await readJsonBody(req)),
+          );
           return;
         }
 

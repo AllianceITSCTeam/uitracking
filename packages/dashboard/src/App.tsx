@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import type { HistoryEntry } from "core/node";
 import { Sidebar } from "./Sidebar.js";
 import { ConfigPage } from "./ConfigPage.js";
+import { ScreensConfigPage } from "./ScreensConfigPage.js";
 import { ReviewPage } from "./ReviewPage.js";
 import { useQueryParams } from "./use-query-params.js";
 import { useProjects } from "./use-projects.js";
@@ -13,7 +14,8 @@ export function App() {
   const [projectsRefreshToken, setProjectsRefreshToken] = useState(0);
   const projects = useProjects(projectsRefreshToken);
 
-  const page = params.page === "config" ? "config" : "review";
+  const page =
+    params.page === "config" ? "config" : params.page === "screens-config" ? "screens-config" : "review";
   const projectId = params.project;
   const runId = params.run;
   const currentRun = runs.find((r) => r.runId === runId);
@@ -32,6 +34,12 @@ export function App() {
           <h1 className="text-2xl font-semibold text-slate-900">DEBQC — Dashboard</h1>
           {page === "config" ? (
             <ConfigPage projects={projects} onChanged={handleProjectsChanged} />
+          ) : page === "screens-config" ? (
+            <ScreensConfigPage
+              projects={projects}
+              projectId={projectId}
+              onProjectChange={(id) => setQueryParams({ project: id })}
+            />
           ) : (
             <ReviewPage
               projects={projects}

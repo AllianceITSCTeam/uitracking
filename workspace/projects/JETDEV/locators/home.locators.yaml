@@ -1,0 +1,17 @@
+screen: home
+controls:
+  - key: btn.login
+    locator:
+      strategy: getByRole
+      value: button
+      options:
+        name: Login
+    track:
+      - text
+  - key: field.email
+    locator:
+      strategy: getByTestId
+      value: email-input
+    track:
+      - text
+      - type
