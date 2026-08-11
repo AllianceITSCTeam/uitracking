@@ -13,6 +13,7 @@ import {
   getScreensConfig,
   listProjects,
   listRuns,
+  parseTsLocatorImport,
   reviewRun,
   updateLocatorsFile,
   updateProject,
@@ -256,6 +257,43 @@ describe("api-handlers", () => {
         screen: "home",
         controls: [{ key: "btn.submit", locator: { strategy: "getByMagic", value: "button" } }],
       });
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).code).toBe("VALIDATION_ERROR");
+    }
+  });
+
+  it("parseTsLocatorImport converts static getters and returns skipped entries", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    const source = `
+      export class Locators {
+        get loginButton(): Locator {
+          return this.page.getByTestId('btn-login');
+        }
+        assetTypeCard(label: string): Locator {
+          return this.page.locator('.card').filter({ hasText: label });
+        }
+      }
+    `;
+
+    const result = parseTsLocatorImport(workspaceRoot, "myapp", "home", { source });
+
+    expect(result.file).toEqual({
+      screen: "home",
+      controls: [{ key: "loginButton", locator: { strategy: "getByTestId", value: "btn-login" } }],
+    });
+    expect(result.skipped).toEqual([
+      { name: "assetTypeCard", reason: "Có tham số, không convert được sang giá trị tĩnh" },
+    ]);
+  });
+
+  it("parseTsLocatorImport throws VALIDATION_ERROR when source is missing", () => {
+    createProject(workspaceRoot, { id: "myapp", name: "My App" });
+
+    expect.assertions(2);
+    try {
+      parseTsLocatorImport(workspaceRoot, "myapp", "home", {});
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).code).toBe("VALIDATION_ERROR");

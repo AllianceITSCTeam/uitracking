@@ -11,6 +11,7 @@ import {
   getScreensConfig,
   listProjects,
   listRuns,
+  parseTsLocatorImport,
   reviewRun,
   updateLocatorsFile,
   updateProject,
@@ -94,6 +95,8 @@ export function apiPlugin(): Plugin {
         const reviewMatch = /^\/api\/projects\/([^/]+)\/runs\/([^/]+)\/review$/.exec(path);
         const screensConfigMatch = /^\/api\/projects\/([^/]+)\/screens-config$/.exec(path);
         const locatorsMatch = /^\/api\/projects\/([^/]+)\/screens\/([^/]+)\/locators$/.exec(path);
+        const locatorsImportTsMatch =
+          /^\/api\/projects\/([^/]+)\/screens\/([^/]+)\/locators\/import-ts$/.exec(path);
 
         if (method === "GET" && path === "/api/projects") {
           await handle(res, () => listProjects(WORKSPACE_ROOT));
@@ -159,6 +162,14 @@ export function apiPlugin(): Plugin {
           const [, projectId, screenId] = locatorsMatch;
           await handle(res, async () =>
             updateLocatorsFile(WORKSPACE_ROOT, projectId as string, screenId as string, await readJsonBody(req)),
+          );
+          return;
+        }
+
+        if (method === "POST" && locatorsImportTsMatch) {
+          const [, projectId, screenId] = locatorsImportTsMatch;
+          await handle(res, async () =>
+            parseTsLocatorImport(WORKSPACE_ROOT, projectId as string, screenId as string, await readJsonBody(req)),
           );
           return;
         }

@@ -13,11 +13,13 @@ import {
   loadProjectsFile,
   loadScreensConfig,
   markRunReviewed,
+  parseTsLocatorFile,
   sanitizeIdSegment,
   writeLocatorsFile,
   writeProjectsFile,
   writeScreensConfig,
   type HistoryEntry,
+  type TsLocatorImportResult,
 } from "core/node";
 import type { ProjectsFile } from "core";
 
@@ -243,6 +245,26 @@ export function updateLocatorsFile(
 
   writeLocatorsFile(workspaceRoot, id, sId, parsed.data);
   return parsed.data;
+}
+
+export function parseTsLocatorImport(
+  workspaceRoot: string,
+  projectId: string,
+  screenId: string,
+  input: unknown,
+): TsLocatorImportResult {
+  const id = requireValidId(projectId);
+  const sId = requireValidId(screenId);
+  requireProject(workspaceRoot, id);
+
+  const body = (input ?? {}) as { source?: unknown };
+  if (typeof body.source !== "string" || body.source.trim().length === 0) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Nội dung file .ts không được để trống", {
+      source: ["Bắt buộc"],
+    });
+  }
+
+  return parseTsLocatorFile(body.source, sId);
 }
 
 export function reviewRun(workspaceRoot: string, projectId: string, runId: string): HistoryEntry {

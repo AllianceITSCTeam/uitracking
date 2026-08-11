@@ -5,6 +5,7 @@ export * from "./storage-writer.js";
 export * from "./projects-writer.js";
 export * from "./screens-config-writer.js";
 export * from "./locators-writer.js";
+export * from "./ts-locator-import.js";
 export * from "./history.js";
 export * from "./baseline.js";
 export * from "./run-id.js";

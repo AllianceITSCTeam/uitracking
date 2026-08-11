@@ -1,7 +1,12 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { LOCATOR_STRATEGIES, TRACK_FIELDS, type LocatorsFile, type RegistryControl, type TrackField } from "core";
-import { ApiClientError, apiPatch } from "./api-client.js";
+import { ApiClientError, apiPatch, apiPost } from "./api-client.js";
 import { LocatorsImportError, parseLocatorsImportFile } from "./parse-locators-import.js";
+
+type TsLocatorImportResponse = {
+  file: LocatorsFile;
+  skipped: { name: string; reason: string }[];
+};
 
 type Props = {
   projectId: string;
@@ -23,6 +28,7 @@ export function LocatorsEditor({ projectId, screenId, file, onSaved }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [importInfo, setImportInfo] = useState<string | null>(null);
+  const [importSkipped, setImportSkipped] = useState<{ name: string; reason: string }[]>([]);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const updateControl = (index: number, patch: Partial<RegistryControl>) => {
@@ -66,6 +72,24 @@ export function LocatorsEditor({ projectId, screenId, file, onSaved }: Props) {
     if (!importedFile) return;
     setError(null);
     setImportInfo(null);
+    setImportSkipped([]);
+
+    if (importedFile.name.endsWith(".ts")) {
+      try {
+        const source = await importedFile.text();
+        const result = await apiPost<TsLocatorImportResponse>(
+          `/api/projects/${projectId}/screens/${screenId}/locators/import-ts`,
+          { source },
+        );
+        setControls(result.file.controls);
+        setImportSkipped(result.skipped);
+        setImportInfo(`Đã import ${result.file.controls.length} control từ file .ts. Kiểm tra lại rồi bấm Lưu.`);
+      } catch (err) {
+        setError(errorMessage(err));
+      }
+      return;
+    }
+
     try {
       const text = await importedFile.text();
       const imported = parseLocatorsImportFile(text);
@@ -104,7 +128,7 @@ export function LocatorsEditor({ projectId, screenId, file, onSaved }: Props) {
           <input
             ref={importInputRef}
             type="file"
-            accept=".yaml,.yml"
+            accept=".yaml,.yml,.ts"
             data-testid="locator_import_file_input"
             onChange={handleImportFile}
             className="hidden"
@@ -118,6 +142,21 @@ export function LocatorsEditor({ projectId, screenId, file, onSaved }: Props) {
       )}
       {importInfo && (
         <p className="rounded-md bg-indigo-50 px-3 py-2 text-sm text-indigo-700">{importInfo}</p>
+      )}
+      {importSkipped.length > 0 && (
+        <div
+          data-testid="locator_import_skipped_warning"
+          className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800"
+        >
+          <p className="font-medium">Bỏ qua {importSkipped.length} locator không tự convert được:</p>
+          <ul className="ml-4 list-disc">
+            {importSkipped.map((item) => (
+              <li key={item.name}>
+                <span className="font-mono">{item.name}</span> — {item.reason}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <ul className="space-y-2">
         {controls.map((control, index) => (
