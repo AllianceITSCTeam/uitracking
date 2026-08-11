@@ -8,11 +8,13 @@ import {
   deleteProject,
   getLocatorsFile,
   getReport,
+  getRunJob,
   getScreensConfig,
   listProjects,
   listRuns,
   parseTsLocatorImport,
   reviewRun,
+  triggerRun,
   updateLocatorsFile,
   updateProject,
   updateScreensConfig,
@@ -93,6 +95,7 @@ export function apiPlugin(): Plugin {
         const runsMatch = /^\/api\/projects\/([^/]+)\/runs$/.exec(path);
         const reportMatch = /^\/api\/projects\/([^/]+)\/runs\/([^/]+)\/report$/.exec(path);
         const reviewMatch = /^\/api\/projects\/([^/]+)\/runs\/([^/]+)\/review$/.exec(path);
+        const captureJobMatch = /^\/api\/projects\/([^/]+)\/capture-job$/.exec(path);
         const screensConfigMatch = /^\/api\/projects\/([^/]+)\/screens-config$/.exec(path);
         const locatorsMatch = /^\/api\/projects\/([^/]+)\/screens\/([^/]+)\/locators$/.exec(path);
         const locatorsImportTsMatch =
@@ -135,6 +138,18 @@ export function apiPlugin(): Plugin {
         if (method === "POST" && reviewMatch) {
           const [, projectId, runId] = reviewMatch;
           await handle(res, () => reviewRun(WORKSPACE_ROOT, projectId as string, runId as string));
+          return;
+        }
+
+        if (method === "POST" && captureJobMatch) {
+          const [, projectId] = captureJobMatch;
+          await handle(res, () => triggerRun(WORKSPACE_ROOT, projectId as string));
+          return;
+        }
+
+        if (method === "GET" && captureJobMatch) {
+          const [, projectId] = captureJobMatch;
+          await handle(res, () => getRunJob(WORKSPACE_ROOT, projectId as string));
           return;
         }
 

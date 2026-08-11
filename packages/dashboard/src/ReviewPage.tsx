@@ -3,6 +3,7 @@ import { ProjectSelect } from "./ProjectSelect.js";
 import { RunTimeline } from "./RunTimeline.js";
 import { DiffViewer } from "./DiffViewer.js";
 import { ReviewButton } from "./ReviewButton.js";
+import { TriggerRunButton } from "./TriggerRunButton.js";
 import type { ProjectSummary } from "./api-handlers.js";
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
   onSelectRun: (runId: string) => void;
   onRunsLoaded: (runs: HistoryEntry[]) => void;
   onReviewed: () => void;
+  onRunTriggered: (runId: string | undefined) => void;
   onChangeTypeFilter: (changeType: string | undefined) => void;
   onLocaleFilter: (locale: string | undefined) => void;
 };
@@ -33,6 +35,7 @@ export function ReviewPage({
   onSelectRun,
   onRunsLoaded,
   onReviewed,
+  onRunTriggered,
   onChangeTypeFilter,
   onLocaleFilter,
 }: Props) {
@@ -41,7 +44,8 @@ export function ReviewPage({
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <ProjectSelect projects={projects} projectId={projectId} onChange={onProjectChange} />
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <TriggerRunButton projectId={projectId} onRunFinished={onRunTriggered} />
         <RunTimeline
           projectId={projectId}
           runId={runId}

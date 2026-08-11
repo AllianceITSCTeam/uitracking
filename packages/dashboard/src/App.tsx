@@ -53,6 +53,10 @@ export function App() {
               onSelectRun={(id) => setQueryParams({ run: id })}
               onRunsLoaded={handleRunsLoaded}
               onReviewed={() => setRefreshToken((t) => t + 1)}
+              onRunTriggered={(newRunId) => {
+                setRefreshToken((t) => t + 1);
+                if (newRunId) setQueryParams({ run: newRunId });
+              }}
               onChangeTypeFilter={(changeType) => setQueryParams({ changeType })}
               onLocaleFilter={(locale) => setQueryParams({ locale })}
             />

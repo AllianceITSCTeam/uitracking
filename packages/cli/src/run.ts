@@ -20,19 +20,22 @@ import { renderReportHtml } from "./render-report-html.js";
 
 export type TrackRunOptions = { project?: string; all?: boolean };
 
-async function runForProject(projectId: string, workspaceRoot: string): Promise<boolean> {
+export type CaptureRunResult = { ok: boolean; runId?: string };
+
+/** Chạy pipeline capture→diff→report cho 1 project. Dùng bởi CLI (`track run`) và dashboard (trigger job). */
+export async function runCaptureForProject(projectId: string, workspaceRoot: string): Promise<CaptureRunResult> {
   const projectsResult = loadProjectsFile(join(workspaceRoot, "projects.yaml"));
   if (!projectsResult.ok) {
     for (const error of projectsResult.errors) {
       console.error(`${error.file}: ${error.field} — ${error.message}`);
     }
-    return false;
+    return { ok: false };
   }
 
   const project = projectsResult.data.projects.find((entry) => entry.id === projectId);
   if (!project) {
     console.error(`Project "${projectId}" not found in ${join(workspaceRoot, "projects.yaml")}`);
-    return false;
+    return { ok: false };
   }
 
   const screensConfigPath = join(workspaceRoot, project.config);
@@ -41,7 +44,7 @@ async function runForProject(projectId: string, workspaceRoot: string): Promise<
     for (const error of screensResult.errors) {
       console.error(`${error.file}: ${error.field} — ${error.message}`);
     }
-    return false;
+    return { ok: false };
   }
   const screensConfig = screensResult.data;
   const projectDir = buildProjectDir(workspaceRoot, projectId);
@@ -139,7 +142,7 @@ async function runForProject(projectId: string, workspaceRoot: string): Promise<
 
   log("info", "run finished", { run_id: runId, project: projectId, ...report.severityCounts });
 
-  return true;
+  return { ok: true, runId };
 }
 
 /** Chạy pipeline capture→diff→report cho 1 project (`--project`) hoặc toàn bộ (`--all`). Trả exit code. */
@@ -150,8 +153,8 @@ export async function runTrackRun(options: TrackRunOptions, workspaceRoot: strin
   }
 
   if (options.project) {
-    const ok = await runForProject(options.project, workspaceRoot);
-    return ok ? 0 : 1;
+    const result = await runCaptureForProject(options.project, workspaceRoot);
+    return result.ok ? 0 : 1;
   }
 
   if (options.all) {
@@ -165,8 +168,8 @@ export async function runTrackRun(options: TrackRunOptions, workspaceRoot: strin
 
     let hasIssue = false;
     for (const project of projectsResult.data.projects) {
-      const ok = await runForProject(project.id, workspaceRoot);
-      if (!ok) hasIssue = true;
+      const result = await runCaptureForProject(project.id, workspaceRoot);
+      if (!result.ok) hasIssue = true;
     }
     return hasIssue ? 1 : 0;
   }

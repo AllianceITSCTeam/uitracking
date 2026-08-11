@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "cli": "workspace:*",
     "core": "workspace:*",
     "js-yaml": "^4.1.0",
     "react": "^18.3.1",
