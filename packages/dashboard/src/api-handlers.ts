@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { getCurrentCaptureJob, triggerCaptureJob, type CaptureJobState } from "./capture-job-runner.js";
 import { ScreensConfigSchema, LocatorsFileSchema } from "core";
 import type { LocatorsFile, Report, ScreensConfig } from "core";
 import {
@@ -265,6 +266,22 @@ export function parseTsLocatorImport(
   }
 
   return parseTsLocatorFile(body.source, sId);
+}
+
+export type TriggerRunResponse = { job: CaptureJobState; alreadyRunning: boolean };
+
+export function triggerRun(workspaceRoot: string, projectId: string): TriggerRunResponse {
+  const id = requireValidId(projectId);
+  requireProject(workspaceRoot, id);
+
+  return triggerCaptureJob(workspaceRoot, id);
+}
+
+export function getRunJob(workspaceRoot: string, projectId: string): CaptureJobState | null {
+  const id = requireValidId(projectId);
+  requireProject(workspaceRoot, id);
+
+  return getCurrentCaptureJob() ?? null;
 }
 
 export function reviewRun(workspaceRoot: string, projectId: string, runId: string): HistoryEntry {

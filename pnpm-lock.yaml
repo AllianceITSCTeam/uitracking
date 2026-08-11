@@ -98,6 +98,9 @@ importers:
 
   packages/dashboard:
     dependencies:
+      cli:
+        specifier: workspace:*
+        version: link:../cli
       core:
         specifier: workspace:*
         version: link:../core

@@ -10,15 +10,18 @@ import {
   deleteProject,
   getLocatorsFile,
   getReport,
+  getRunJob,
   getScreensConfig,
   listProjects,
   listRuns,
   parseTsLocatorImport,
   reviewRun,
+  triggerRun,
   updateLocatorsFile,
   updateProject,
   updateScreensConfig,
 } from "./api-handlers.js";
+import { resetCaptureJobForTest } from "./capture-job-runner.js";
 
 function writeWorkspace(root: string): void {
   mkdirSync(join(root, "projects", "fixture-app"), { recursive: true });
@@ -47,6 +50,7 @@ describe("api-handlers", () => {
 
   afterEach(() => {
     rmSync(workspaceRoot, { recursive: true, force: true });
+    resetCaptureJobForTest();
   });
 
   it("listProjects returns projects from projects.yaml", () => {
@@ -109,6 +113,29 @@ describe("api-handlers", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).code).toBe("RUN_NOT_FOUND");
+    }
+  });
+
+  it("getRunJob returns null when no capture job has been triggered yet", () => {
+    expect(getRunJob(workspaceRoot, "fixture-app")).toBeNull();
+  });
+
+  it("triggerRun starts a running job and getRunJob reflects it", () => {
+    const { job, alreadyRunning } = triggerRun(workspaceRoot, "fixture-app");
+
+    expect(alreadyRunning).toBe(false);
+    expect(job.status).toBe("running");
+    expect(job.projectId).toBe("fixture-app");
+    expect(getRunJob(workspaceRoot, "fixture-app")).toEqual(job);
+  });
+
+  it("triggerRun throws PROJECT_NOT_FOUND for unknown project", () => {
+    expect.assertions(2);
+    try {
+      triggerRun(workspaceRoot, "unknown-app");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).code).toBe("PROJECT_NOT_FOUND");
     }
   });
 
